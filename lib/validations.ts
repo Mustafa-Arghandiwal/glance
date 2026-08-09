@@ -1,9 +1,9 @@
 import z from 'zod'
 
 export const signUpSchema = z.object({
-    username: z.string().min(3).max(20),
+    username: z.string().min(3, "Too short").max(20, "Too long"),
     email: z.email(),
-    password: z.string().min(8),
+    password: z.string().min(8, "Too short"),
     confirmPassword: z.string(),
 }).refine(
     data => data.password === data.confirmPassword,
