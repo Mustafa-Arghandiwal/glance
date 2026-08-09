@@ -10,18 +10,22 @@ import {
     FieldSeparator,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { GalleryVerticalEndIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link";
-import signUp from "@/lib/actions"
+import signUp, { type SignUpState } from "@/lib/actions"
+import { useActionState } from "react"
+
+const initialState: SignUpState = {}
 
 export function SignupForm({
     className,
     ...props
 }: React.ComponentProps<"div">) {
+    const [state, formAction, isPending] = useActionState(signUp, initialState)
+    console.log(state)
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
-            <form action={signUp}>
+            <form action={formAction}>
                 <FieldGroup>
                     <div className="flex flex-col items-center gap-2 text-center">
                         <Link
@@ -46,6 +50,11 @@ export function SignupForm({
                             type="text"
                             placeholder="Enter your username"
                         />
+                        {state.error?.fieldErrors.username && (
+                            <p className="text-xs text-red-400">
+                                {state.error.fieldErrors.username[0]}
+                            </p>
+                        )}
                         <FieldDescription>
                             Choose a unique username for your account.
                         </FieldDescription>
@@ -59,18 +68,33 @@ export function SignupForm({
                             placeholder="m@example.com"
                             required
                         />
+                        {state.error?.fieldErrors.email && (
+                            <p className="text-xs text-red-400">
+                                {state.error.fieldErrors.email[0]}
+                            </p>
+                        )}
                     </Field>
                     <Field>
                         <Field className="grid grid-cols-2 gap-4">
                             <Field>
                                 <FieldLabel htmlFor="password">Password</FieldLabel>
                                 <Input id="password" name="password" type="password" required />
+                                {state.error?.fieldErrors.password && (
+                                    <p className="text-xs text-red-400">
+                                        {state.error.fieldErrors.password[0]}
+                                    </p>
+                                )}
                             </Field>
                             <Field>
                                 <FieldLabel htmlFor="confirm-password">
                                     Confirm Password
                                 </FieldLabel>
                                 <Input id="confirm-password" name="confirmPassword" type="password" required />
+                                {state.error?.fieldErrors.confirmPassword && (
+                                    <p className="text-xs text-red-400">
+                                        {state.error.fieldErrors.confirmPassword[0]}
+                                    </p>
+                                )}
                             </Field>
                         </Field>
                         <FieldDescription>
@@ -78,7 +102,12 @@ export function SignupForm({
                         </FieldDescription>
                     </Field>
                     <Field>
-                        <Button type="submit">Create Account</Button>
+                        <Button type="submit" disabled={isPending} className="disabled:opacity-50">Create Account</Button>
+                        {state.message && (
+                            <p className="text-xs text-red-400">
+                                {state.message}
+                            </p>
+                        )}
                     </Field>
                     <FieldSeparator>Or</FieldSeparator>
                     <Button variant="outline" type="button">
