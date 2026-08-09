@@ -16,9 +16,13 @@ export type SignUpState = {
         }
     }
     message?: string
+    values?: {
+        username?: string
+        email?: string
+    }
 }
 
-export default async function signUp(previousState: SignUpState, formData: FormData) {
+export default async function signUp(_previousState: SignUpState, formData: FormData) {
 
     // await new Promise((resolve) => setTimeout(resolve, 2000))
 
@@ -32,7 +36,13 @@ export default async function signUp(previousState: SignUpState, formData: FormD
     //validation failed
     if (!success) {
         const flattened = z.flattenError(error)
-        return { error: flattened }
+        return {
+            error: flattened,
+            values: {
+                username: formData.get('username') as string,
+                email: formData.get('email') as string,
+            }
+        }
     }
 
     // validation succeeded
@@ -40,7 +50,13 @@ export default async function signUp(previousState: SignUpState, formData: FormD
     const { username, email, password } = data
     const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email))
     console.log(existingUser)
-    if (existingUser.length > 0) return { message: "Account already exists for this email" }
+    if (existingUser.length > 0) return {
+        message: "Account already exists for this email",
+        values: {
+            username: formData.get('username') as string,
+            email: formData.get('email') as string
+        }
+    }
 
     return {}
 }

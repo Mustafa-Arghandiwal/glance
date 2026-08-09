@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link";
 import signUp, { type SignUpState } from "@/lib/actions"
-import { useActionState } from "react"
+import { useActionState, useState } from "react"
 
 const initialState: SignUpState = {}
 
@@ -22,7 +22,8 @@ export function SignupForm({
     ...props
 }: React.ComponentProps<"div">) {
     const [state, formAction, isPending] = useActionState(signUp, initialState)
-    console.log(state)
+    const [username, setUsername] = useState('')
+    const [email, setEmail] = useState('')
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <form action={formAction}>
@@ -48,6 +49,9 @@ export function SignupForm({
                             id="input-field-username"
                             name="username"
                             type="text"
+                            defaultValue={state.values?.username}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
                             placeholder="Enter your username"
                         />
                         {state.error?.fieldErrors.username && (
@@ -65,6 +69,9 @@ export function SignupForm({
                             id="email"
                             name="email"
                             type="email"
+                            defaultValue={state.values?.email}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             placeholder="m@example.com"
                             required
                         />
