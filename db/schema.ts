@@ -1,4 +1,4 @@
-import { integer, pgTable, timestamp, varchar, uuid } from "drizzle-orm/pg-core";
+import { integer, pgTable, timestamp, varchar, uuid, text } from "drizzle-orm/pg-core";
 
 export const usersTable = pgTable("users", {
     id: uuid().primaryKey().defaultRandom(),
@@ -8,3 +8,11 @@ export const usersTable = pgTable("users", {
     salt: varchar({ length: 32 }).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const sessionsTable = pgTable("sessions", {
+    id: text("id").primaryKey(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => usersTable.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at").notNull(),
+})

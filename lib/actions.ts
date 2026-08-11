@@ -6,6 +6,8 @@ import z from 'zod'
 import { signUpSchema } from './validations'
 import { generateSalt, hashPassword } from './utils'
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import { createUserSession } from './auth/session'
 
 export type SignUpState = {
     error?: {
@@ -61,17 +63,21 @@ export default async function signUp(_previousState: SignUpState = {}, formData:
     }
 
     // Sign up user
+    let user
     try {
         const salt = generateSalt()
         const hashedPassword = await hashPassword(password, salt)
-        const [user] = await db.insert(usersTable).values({
+        const result = await db.insert(usersTable).values({
             username, email, password: hashedPassword, salt
         }).returning({ id: usersTable.id })
-        if (user == null) return { message: "Unable to create account 1" }
-        // return { message: "Account created successfully" }
+        user = result[0]
     } catch {
-        return { message: "Unable to create account 2" }
+        return { message: "Unable to create account" }
     }
+
+    if (!user) return { message: "Unable to create account" }
+
+    await createUserSession(user.id)
 
     redirect('/')
 
