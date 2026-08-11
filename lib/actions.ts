@@ -4,6 +4,8 @@ import { usersTable } from '@/db/schema'
 import { eq } from 'drizzle-orm'
 import z from 'zod'
 import { signUpSchema } from './validations'
+import { generateSalt, hashPassword } from './utils'
+import { redirect } from 'next/navigation'
 
 export type SignUpState = {
     error?: {
@@ -22,7 +24,7 @@ export type SignUpState = {
     }
 }
 
-export default async function signUp(_previousState: SignUpState, formData: FormData) {
+export default async function signUp(_previousState: SignUpState = {}, formData: FormData): Promise<SignUpState> {
 
     // await new Promise((resolve) => setTimeout(resolve, 2000))
 
@@ -49,14 +51,28 @@ export default async function signUp(_previousState: SignUpState, formData: Form
     // But duplicate user
     const { username, email, password } = data
     const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email))
-    console.log(existingUser)
     if (existingUser.length > 0) return {
         message: "Account already exists for this email",
+        // this is put back into fields to avoid re-entrering values
         values: {
             username: formData.get('username') as string,
             email: formData.get('email') as string
         }
     }
 
-    return {}
+    // Sign up user
+    try {
+        const salt = generateSalt()
+        const hashedPassword = await hashPassword(password, salt)
+        const [user] = await db.insert(usersTable).values({
+            username, email, password: hashedPassword, salt
+        }).returning({ id: usersTable.id })
+        if (user == null) return { message: "Unable to create account 1" }
+        // return { message: "Account created successfully" }
+    } catch {
+        return { message: "Unable to create account 2" }
+    }
+
+    redirect('/')
+
 }
