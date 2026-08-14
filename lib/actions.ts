@@ -7,7 +7,7 @@ import { signUpSchema } from './validations'
 import { generateSalt, hashPassword } from './utils'
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { createUserSession } from './auth/session'
+import { createUserSession, getCurrentUser } from './auth/session'
 
 export type SignUpState = {
     error?: {
@@ -42,6 +42,7 @@ export default async function signUp(_previousState: SignUpState = {}, formData:
         const flattened = z.flattenError(error)
         return {
             error: flattened,
+            // this is put back into fields to avoid re-entrering values
             values: {
                 username: formData.get('username') as string,
                 email: formData.get('email') as string,
@@ -55,7 +56,6 @@ export default async function signUp(_previousState: SignUpState = {}, formData:
     const existingUser = await db.select().from(usersTable).where(eq(usersTable.email, email))
     if (existingUser.length > 0) return {
         message: "Account already exists for this email",
-        // this is put back into fields to avoid re-entrering values
         values: {
             username: formData.get('username') as string,
             email: formData.get('email') as string
@@ -80,5 +80,5 @@ export default async function signUp(_previousState: SignUpState = {}, formData:
     await createUserSession(user.id)
 
     redirect('/')
-
 }
+
